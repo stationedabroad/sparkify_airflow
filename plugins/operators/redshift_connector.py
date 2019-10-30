@@ -16,8 +16,10 @@ class S3RedshiftConnector(BaseOperator):
 		self.redshift_conn_id = redshift_conn_id
 		self.aws_conn_id = aws_conn_id
 
+		# if aws_conn_id:
 		aws_hook = AwsHook(self.aws_conn_id)
 		self.credentials = aws_hook.get_credentials()
+		# if redshift_conn_id:
 		self.redshift = PostgresHook(postgres_conn_id = self.redshift_conn_id)
 
 	def execute(self):

@@ -39,8 +39,7 @@ with DAG('udac_example_dag', schedule_interval=None, default_args=default_args) 
         json_method='auto',
         redshift_conn_id='redshift',
         aws_conn_id='aws_credential',
-        autocommit=True,
-        # provide_context=True,
+        autocommit=True
     )
 
     # Task 3 - Staging events S3 to Redshift
@@ -53,8 +52,15 @@ with DAG('udac_example_dag', schedule_interval=None, default_args=default_args) 
         json_method='s3://udacity-dend/log_json_path.json',
         redshift_conn_id='redshift',
         aws_conn_id='aws_credential',
-        autocommit=True,
-        # provide_context=True,
+        autocommit=True
+    )
+
+    load_user_dimension_table = LoadDimensionOperator(
+        task_id='Load_user_dim_table',
+        table='users',
+        columns="user_id, first_name, last_name, gender, level",
+        sql_insert=SqlQueries.user_table_insert,
+        redshift_conn_id='redshift'
     )
 
     start_operator >> stage_songs_to_redshift
