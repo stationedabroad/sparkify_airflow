@@ -1,16 +1,27 @@
 class SqlQueries:
+    # Columns for insert into dimension and fact tables
+    sparkify_table_columns = {
+        "songplays": ["start_time", "user_id", "level", "song_id", "artist_id", "session_id", "location", "user_agent"],
+        "users": ["user_id", "first_name", "last_name", "gender", "level"],
+        "songs": ["song_id", "title", "artist_id", "year", "duration"],
+        "artists": ["artist_id", "name", "location", "latitude", "longitude"],
+        "time": ["start_time", "hour", "day", "week", "month", "year", "weekday"]
+    }
+
     songplay_table_insert = ("""
         SELECT
-                md5(events.sessionid || events.start_time) songplay_id,
-                events.start_time, 
-                events.userid, 
+               -- md5(events.session_id || events.start_time) songplay_id,
+                events.start_time,
+                --to_timestamp(events.start_time, 'YYYY-MM-DD HH:MI:SS:US'), 
+                --timestamp 'epoch' + events.ts/1000 * interval '1 second' as start_time,
+                events.user_id, 
                 events.level, 
                 songs.song_id, 
                 songs.artist_id, 
-                events.sessionid, 
+                events.session_id, 
                 events.location, 
-                events.useragent
-                FROM (SELECT TIMESTAMP 'epoch' + ts/1000 * interval '1 second' AS start_time, *
+                events.user_agent
+                FROM (SELECT (TIMESTAMP 'epoch' + ts/1000 * interval '1 second') at time zone 'UTC' AS start_time, *
             FROM staging_events
             WHERE page='NextSong') events
             LEFT JOIN staging_songs songs
@@ -20,7 +31,7 @@ class SqlQueries:
     """)
 
     user_table_insert = ("""
-        SELECT distinct userid, firstname, lastname, gender, level
+        SELECT distinct user_id, first_name, last_name, gender, level
         FROM staging_events
         WHERE page='NextSong'
     """)
@@ -40,3 +51,9 @@ class SqlQueries:
                extract(month from start_time), extract(year from start_time), extract(dayofweek from start_time)
         FROM songplays
     """)
+
+    def get_formatted_columns(table):
+        """
+             Returns comma seperated column list of target tables
+        """
+        return ", ".join(SqlQueries.sparkify_table_columns.get(table))

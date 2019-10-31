@@ -13,6 +13,11 @@ from helpers import SqlQueries
 default_args = {
     'owner': 'udacity',
     'start_date': datetime(2019, 10, 30),
+    'depends_on_past': False,
+    'retries': 3,
+    'email_on_retry': False,
+    'retry_delay': timedelta(minutes=5),
+    'catchup_by_default': False,
 }
 
 #schedule_interval='0 * * * *'
@@ -55,21 +60,57 @@ with DAG('udac_example_dag', schedule_interval=None, default_args=default_args) 
         autocommit=True
     )
 
+    load_songplays_table = LoadDimensionOperator(
+        task_id='Load_songplays_fact_table',
+        table='songplays',
+        columns=SqlQueries.get_formatted_columns('songplays'),
+        sql_insert=SqlQueries.songplay_table_insert,
+        redshift_conn_id='redshift'
+    )
+
+
     load_user_dimension_table = LoadDimensionOperator(
         task_id='Load_user_dim_table',
         table='users',
-        columns="user_id, first_name, last_name, gender, level",
+        columns=SqlQueries.get_formatted_columns('users'),
         sql_insert=SqlQueries.user_table_insert,
         redshift_conn_id='redshift'
     )
 
-    start_operator >> stage_songs_to_redshift
-    start_operator >> stage_events_to_redshift
 
-# load_songplays_table = LoadFactOperator(
-#     task_id='Load_songplays_fact_table',
-#     dag=dag
-# )
+    load_song_dimension_table = LoadDimensionOperator(
+        task_id='Load_song_dim_table',
+        table='songs',
+        columns=SqlQueries.get_formatted_columns('songs'),
+        sql_insert=SqlQueries.song_table_insert,
+        redshift_conn_id='redshift'
+    )
+
+    
+    load_artist_dimension_table = LoadDimensionOperator(
+        task_id='Load_artist_dim_table',
+        table='artists',
+        columns=SqlQueries.get_formatted_columns('artists'),
+        sql_insert=SqlQueries.artist_table_insert,
+        redshift_conn_id='redshift'
+    )
+
+    load_time_dimension_table = LoadDimensionOperator(
+        task_id='Load_time_dim_table',
+        table='time',
+        columns=SqlQueries.get_formatted_columns('time'),
+        sql_insert=SqlQueries.time_table_insert,
+        redshift_conn_id='redshift'
+    )
+
+
+    start_operator >> stage_songs_to_redshift >> load_songplays_table
+    start_operator >> stage_events_to_redshift >> load_songplays_table
+    load_songplays_table >> load_user_dimension_table
+    load_songplays_table >> load_song_dimension_table
+    load_songplays_table >> load_artist_dimension_table
+    load_songplays_table >> load_time_dimension_table
+
 
 # load_user_dimension_table = LoadDimensionOperator(
 #     task_id='Load_user_dim_table',

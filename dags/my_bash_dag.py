@@ -17,7 +17,7 @@ with DAG("macro_and_template", schedule_interval=None, default_args=default_args
 	task_1 = BashOperator(
 			task_id="display",
 			bash_command="echo EXECUTION DATA IS {{ execution_date }}",
-			provide_context=True,
+			# provide_context=True,
 		)
 
 	task_1
