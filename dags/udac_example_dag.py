@@ -1,13 +1,11 @@
 from datetime import datetime, timedelta
 import os
+
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators import (StageToRedshiftOperator, LoadFactDimensionOperator, DataQualityOperator)
-# from airflow.operators.s3_to_redshift_operator import S3ToRedshiftTransfer
 from helpers import SqlQueries
 
-# AWS_KEY = os.environ.get('AWS_KEY')
-# AWS_SECRET = os.environ.get('AWS_SECRET')
 
 default_args = {
     'owner': 'Sulman M',
