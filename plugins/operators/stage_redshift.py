@@ -6,6 +6,20 @@ from airflow.contrib.hooks.aws_hook import AwsHook
 from operators.redshift_connector import S3RedshiftConnector
 
 class StageToRedshiftOperator(S3RedshiftConnector):
+    """
+    This class executes generic COPY FROM to aws redshift from S3 buckets, it writes to staging tables
+    in the entry layer for the redshift DWH.
+    This class inherits from a generic AWS connector class which manages connections.
+
+    params:
+        exec_date - execution date of DAG
+        table - table in redshift to write to
+        s3_bucket - AWS S3 bucket
+        s3_key - AWS S3 key
+        json_method - formats into COPY FROM (using columns mappings or auto)
+        redshift_conn_id - redshift connection details
+        aws_conn_id - AWS connection login
+    """
     template_fields = ('execution_date',)
     ui_color = '#358140'
     copy_sql = """
@@ -31,8 +45,6 @@ class StageToRedshiftOperator(S3RedshiftConnector):
         super(StageToRedshiftOperator, self).__init__(redshift_conn_id=redshift_conn_id, aws_conn_id=aws_conn_id, *args, **kwargs)
 
         self.table = table
-        # self.redshift_conn_id = redshift_conn_id
-        # self.aws_conn_id = aws_conn_id
         self.s3_key = s3_key
         self.s3_bucket = s3_bucket
         self.json_method = json_method
@@ -40,24 +52,13 @@ class StageToRedshiftOperator(S3RedshiftConnector):
 
     def execute(self, context):
         self.log.info(f'Execution of task on execution date {self.execution_date}')
-
-        # aws_hook = AwsHook(self.aws_conn_id)
-        # credentials = aws_hook.get_credentials()
-
-        # self.log.info('Making connection to redshift')
-        # redshift = PostgresHook(postgres_conn_id = self.redshift_conn_id)
-
-        # self.log.info('clearing data from Redshift table for new data')
-        # redshift.run("DELETE FROM {}".format(self.table))
-
         self.log.info('Starting to copy data from s3 to redshift')
-        # rendered_data_source_key = self.s3_key.format(**context)
-        #data_source_s3_path = "s3://{}/{}/".format(self.s3_bucket, rendered_data_source_key)
-        data_source_s3_path = f"s3://{self.s3_bucket}/{self.s3_key}"
+
+        s3_path = f"s3://{self.s3_bucket}/{self.s3_key}"
 
         copy_sql = StageToRedshiftOperator.copy_sql.format(
             self.table,
-            data_source_s3_path,
+            s3_path,
             self.credentials.access_key,
             self.credentials.secret_key,
             self.json_method
