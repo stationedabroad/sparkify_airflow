@@ -18,7 +18,7 @@ default_args = {
 }
 
 
-with DAG('sparkify_dag', schedule_interval=None, default_args=default_args) as dag:
+with DAG('sparkify_dag', schedule_interval='@hourly', default_args=default_args) as dag:
     # Task 1 - Begin
     start_operator = DummyOperator(
         task_id='Begin_execution',
