@@ -1,5 +1,5 @@
-# sparkify_airflow
-This folder includes contents on a basic implementation project for airflow, using a pipeline which serves using the following:
+# Sparkify_Airflow
+This repository includes contents on a basic implementation project for airflow, using a pipeline which serves using the following:
   * **S3 connector source data reads json from S3 buckets**
   * **AWS Redshift connector target writes to staging and fact/dimension tables**
   * **Basic automation of data quality checks**
@@ -14,5 +14,6 @@ The data flow appears like this in the graph view screen in airflow, with the *s
 * I created a base operator whch abstracted away the connection details (*AWS logins* and *Redshfit* cluster details).  this saved a great deal of repeat code and followed the DRY principle.  Hence, the load fact and dimensions operators as well as the data quality check operator use the **S3RedshiftConnector** class as a parent and implement the execute function with custom code.
 * I did not use the *truncate* method for writing dimension tables.  This is because I believe this is incorrect; dropping dimension tables each time will not guarantee me the dimension table keys (if they are custom keys as they are and should be in most start schea designs) will always be the same.  Hence the dimension keys become aligned with the facts keys on all future loads.  Dropping the dimension table for me does not serve any purpose.
 * I used the *SqlQueries* class to good affect, using  it to manage the data quality checks, inserts and table columns.  In this sense its a one stop shop for the ETL process, one file which can be managed and maintained when needing to update fields, or quality checks.
+* Initial tables were instantiated in Redshift using the SQL create table statements from an earlier project, prior to executing the DAG.
 
 [flow_diagram]: airflow_sparkify_pipeline.png
